@@ -1,0 +1,41 @@
+{
+  "workload": "Identical release packaged app startup,2 synthetic demos,~3s play/processing/record,Hotcue,loop,MIDI action routing; no external codecs. Three isolated runs.",
+  "trials": [
+    {
+      "trial": 0,
+      "wall_clock_seconds": 9.862405625000974,
+      "exit_code": 0,
+      "smoke_passed": true,
+      "timed_seconds": [
+        9.85,
+        9.02,
+        0.15
+      ],
+      "peak_rss_bytes": 253411328
+    },
+    {
+      "trial": 1,
+      "wall_clock_seconds": 8.301286042000356,
+      "exit_code": 0,
+      "smoke_passed": true,
+      "timed_seconds": [
+        8.29,
+        8.34,
+        0.14
+      ],
+      "peak_rss_bytes": 244105216
+    },
+    {
+      "trial": 2,
+      "wall_clock_seconds": 7.395951499998773,
+      "exit_code": 0,
+      "smoke_passed": true,
+      "timed_seconds": [
+        7.39,
+        7.43,
+        0.14
+      ],
+      "peak_rss_bytes": 269058048
+    }
+  ]
+}

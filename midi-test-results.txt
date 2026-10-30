@@ -1,0 +1,1 @@
+PASS: 18 grouped MIDI assertions; custom14-bit pair, packet-spanning running status, press/release, quadrature, reserved values, modifiers, cue OR, SysEx/realtime, heartbeat watchdog, both decks, Learn, Codable persistence and simulation. CoreMIDI sources at verification: []. Physical hardware not tested.

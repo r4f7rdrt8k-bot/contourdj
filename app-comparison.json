@@ -1,0 +1,20 @@
+{
+  "before": {
+    "median_cpu_seconds": 8.48,
+    "median_elapsed_seconds": 8.29,
+    "median_peak_rss_bytes": 253411328
+  },
+  "after": {
+    "median_cpu_seconds": 2.56,
+    "median_elapsed_seconds": 4.98,
+    "median_peak_rss_bytes": 246611968
+  },
+  "cpu_time_reduction_percent": 69.81132075471699,
+  "elapsed_reduction_percent": 39.92762364294329,
+  "limits": [
+    "Three trials each on this Mac with generated demos; not a device-latency benchmark.",
+    "Elapsed time includes intentional playback and recording waits.",
+    "Background workload, temperature and caches can affect wall time.",
+    "Physical USB MIDI controller not tested."
+  ]
+}

@@ -1,0 +1,132 @@
+{
+  "utc": "2026-10-24T22:39:42.930387+00:00",
+  "execution": "read-only isolated AVFoundation converter outside exec sandbox, no audio playback",
+  "results": [
+    {
+      "file": "rea_synth_120bpm_40s.wav",
+      "passed": true,
+      "exit_code": 0,
+      "trace": [
+        "OPEN length 1764000 format <AVAudioFormat 0x104ea1bd0:  2 ch,  44100 Hz, Float32, deinterleaved>",
+        "READ 1 requested 4096 got 4096 pos 4096 length 1764000",
+        "READ 2 requested 3447 got 3447 pos 7543 length 1764000",
+        "CONVERT 0 status 0 frames 8192 total 8192 error none",
+        "READ 3 requested 4096 got 4096 pos 11639 length 1764000",
+        "CONVERT 1 status 0 frames 8192 total 16384 error none",
+        "CONVERT 2 status 0 frames 8192 total 24576 error none",
+        "EOF GUARD 470",
+        "CONVERT 235 status 2 frames 0 total 1920000 error none",
+        "FINISHED frames 1920000 reads 470"
+      ],
+      "stderr": ""
+    },
+    {
+      "file": "rea_synth_120bpm_40s.aiff",
+      "passed": true,
+      "exit_code": 0,
+      "trace": [
+        "OPEN length 1764000 format <AVAudioFormat 0x102179b50:  2 ch,  44100 Hz, Float32, deinterleaved>",
+        "READ 1 requested 4096 got 4096 pos 4096 length 1764000",
+        "READ 2 requested 3447 got 3447 pos 7543 length 1764000",
+        "CONVERT 0 status 0 frames 8192 total 8192 error none",
+        "READ 3 requested 4096 got 4096 pos 11639 length 1764000",
+        "CONVERT 1 status 0 frames 8192 total 16384 error none",
+        "CONVERT 2 status 0 frames 8192 total 24576 error none",
+        "EOF GUARD 470",
+        "CONVERT 235 status 2 frames 0 total 1920000 error none",
+        "FINISHED frames 1920000 reads 470"
+      ],
+      "stderr": ""
+    },
+    {
+      "file": "rea_synth_120bpm_40s.mp3",
+      "passed": true,
+      "exit_code": 0,
+      "trace": [
+        "OPEN length 1764000 format <AVAudioFormat 0x104ba5690:  2 ch,  44100 Hz, Float32, deinterleaved>",
+        "READ 1 requested 4096 got 4096 pos 4096 length 1764000",
+        "READ 2 requested 3447 got 3447 pos 7543 length 1764000",
+        "CONVERT 0 status 0 frames 8192 total 8192 error none",
+        "READ 3 requested 4096 got 4096 pos 11639 length 1764000",
+        "CONVERT 1 status 0 frames 8192 total 16384 error none",
+        "CONVERT 2 status 0 frames 8192 total 24576 error none",
+        "EOF GUARD 470",
+        "CONVERT 235 status 2 frames 0 total 1920000 error none",
+        "FINISHED frames 1920000 reads 470"
+      ],
+      "stderr": ""
+    },
+    {
+      "file": "rea_synth_120bpm_40s.flac",
+      "passed": true,
+      "exit_code": 0,
+      "trace": [
+        "OPEN length 1764000 format <AVAudioFormat 0x101068300:  2 ch,  44100 Hz, Float32, deinterleaved>",
+        "READ 1 requested 4096 got 4096 pos 4096 length 1764000",
+        "READ 2 requested 3447 got 3447 pos 7543 length 1764000",
+        "CONVERT 0 status 0 frames 8192 total 8192 error none",
+        "READ 3 requested 4096 got 4096 pos 11639 length 1764000",
+        "CONVERT 1 status 0 frames 8192 total 16384 error none",
+        "CONVERT 2 status 0 frames 8192 total 24576 error none",
+        "EOF GUARD 470",
+        "CONVERT 235 status 2 frames 0 total 1920000 error none",
+        "FINISHED frames 1920000 reads 470"
+      ],
+      "stderr": ""
+    },
+    {
+      "file": "rea_synth_120bpm_40s_aac.m4a",
+      "passed": true,
+      "exit_code": 0,
+      "trace": [
+        "OPEN length 1764000 format <AVAudioFormat 0x103349190:  2 ch,  44100 Hz, Float32, deinterleaved>",
+        "READ 1 requested 4096 got 4096 pos 4096 length 1764000",
+        "READ 2 requested 3447 got 3447 pos 7543 length 1764000",
+        "CONVERT 0 status 0 frames 8192 total 8192 error none",
+        "READ 3 requested 4096 got 4096 pos 11639 length 1764000",
+        "CONVERT 1 status 0 frames 8192 total 16384 error none",
+        "CONVERT 2 status 0 frames 8192 total 24576 error none",
+        "EOF GUARD 470",
+        "CONVERT 235 status 2 frames 0 total 1920000 error none",
+        "FINISHED frames 1920000 reads 470"
+      ],
+      "stderr": ""
+    },
+    {
+      "file": "rea_synth_120bpm_40s_alac.m4a",
+      "passed": true,
+      "exit_code": 0,
+      "trace": [
+        "OPEN length 1764000 format <AVAudioFormat 0x101041340:  2 ch,  44100 Hz, Float32, deinterleaved>",
+        "READ 1 requested 4096 got 4096 pos 4096 length 1764000",
+        "READ 2 requested 3447 got 3447 pos 7543 length 1764000",
+        "CONVERT 0 status 0 frames 8192 total 8192 error none",
+        "READ 3 requested 4096 got 4096 pos 11639 length 1764000",
+        "CONVERT 1 status 0 frames 8192 total 16384 error none",
+        "CONVERT 2 status 0 frames 8192 total 24576 error none",
+        "EOF GUARD 470",
+        "CONVERT 235 status 2 frames 0 total 1920000 error none",
+        "FINISHED frames 1920000 reads 470"
+      ],
+      "stderr": ""
+    },
+    {
+      "file": "rea_synth_120bpm_40s.ogg",
+      "passed": true,
+      "exit_code": 0,
+      "trace": [
+        "OPEN length 1764000 format <AVAudioFormat 0x1034018c0:  2 ch,  44100 Hz, Float32, deinterleaved>",
+        "READ 1 requested 4096 got 4096 pos 4096 length 1764000",
+        "READ 2 requested 3447 got 3447 pos 7543 length 1764000",
+        "CONVERT 0 status 0 frames 8192 total 8192 error none",
+        "READ 3 requested 4096 got 4096 pos 11639 length 1764000",
+        "CONVERT 1 status 0 frames 8192 total 16384 error none",
+        "CONVERT 2 status 0 frames 8192 total 24576 error none",
+        "EOF GUARD 470",
+        "CONVERT 235 status 2 frames 0 total 1920000 error none",
+        "FINISHED frames 1920000 reads 470"
+      ],
+      "stderr": ""
+    }
+  ]
+}

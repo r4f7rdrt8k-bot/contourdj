@@ -1,0 +1,27 @@
+{
+  "action_callbacks" : 150000,
+  "benchmark_kind" : "background producer through the real callback FIFO; MainActor dispatch and concurrent 1 ms scheduling probe; no audio or visual UI rendering",
+  "callback_checksum" : 44944.801892552008,
+  "callback_order_exact" : true,
+  "concurrent_main_actor_probe_pulses" : 23,
+  "hardware_input" : false,
+  "maximum_probe_gap_seconds" : 0.0022117499993328238,
+  "messages_per_second" : 3678806.1592399166,
+  "midi_messages" : 180000,
+  "observable_notifications_including_terminal_flush" : 4,
+  "schema" : 1,
+  "seconds" : 0.048928916667136946,
+  "statistics" : {
+    "diagnostic_publications" : 2,
+    "drain_batches" : 939,
+    "maximum_drain_bytes" : 448,
+    "peak_pending_bytes" : 304710,
+    "pending_bytes" : 0,
+    "scheduled_workers" : 1
+  },
+  "terminal_values" : {
+    "deck0.high" : 0.1326007326007326,
+    "deck0.jog" : -1,
+    "deck0.touch" : 0
+  }
+}

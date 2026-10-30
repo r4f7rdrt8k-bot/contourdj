@@ -1,0 +1,9 @@
+{
+  "samples": 315392,
+  "max_absolute_difference": 1.1368683772161603e-13,
+  "rms_difference": 2.8628582669845325e-16,
+  "differing_samples": 2,
+  "tolerance": 1e-06,
+  "passed": true,
+  "scope": "First 16 measured callbacks after warmup for all 33 workload/buffer cases. Numerical comparison, not listening certification."
+}

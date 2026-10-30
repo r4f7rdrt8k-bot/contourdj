@@ -1,0 +1,14 @@
+{
+  "final_position" : 39.990000000000002,
+  "idle_deck_notifications" : 0,
+  "idle_root_notifications" : 0,
+  "idle_seconds" : 0.031066083334735595,
+  "idle_ticks" : 10000,
+  "library_checksum" : 500000,
+  "library_queries" : 100,
+  "library_seconds" : 0.0078735833321843529,
+  "library_tracks" : 5000,
+  "moving_deck_notifications" : 0,
+  "moving_root_notifications" : 0,
+  "moving_seconds" : 0.034275874999366351
+}

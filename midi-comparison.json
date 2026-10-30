@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "checked_at_utc": "2026-10-24T23:08:31.680508+00:00",
+  "environment": {
+    "macOS": "26.6.2",
+    "machine": "arm64",
+    "swift": "Apple Swift6.3.3, compiled -swift-version5 -O; not an actual Swift5.9 toolchain run",
+    "cpu_brand": "Unavailable: sandbox denied read-only sysctl query"
+  },
+  "comparisons": [
+    {
+      "profile": "paired14",
+      "midi_messages": 60000,
+      "action_callbacks": 30000,
+      "callback_count_and_checksum_equal": true,
+      "before_seconds": 4.768753958334855,
+      "after_seconds": 0.038200458333449205,
+      "speedup": 124.83499325345068,
+      "before_observable_notifications": 89800,
+      "after_observable_notifications": 2
+    },
+    {
+      "profile": "jog-notes",
+      "midi_messages": 120000,
+      "action_callbacks": 120000,
+      "callback_count_and_checksum_equal": true,
+      "before_seconds": 9.140386999999464,
+      "after_seconds": 0.038324291666867794,
+      "speedup": 238.50113341824743,
+      "before_observable_notifications": 359800,
+      "after_observable_notifications": 2
+    },
+    {
+      "profile": "mixed-running-status",
+      "midi_messages": 180000,
+      "action_callbacks": 150000,
+      "callback_count_and_checksum_equal": true,
+      "before_seconds": 13.61452087500038,
+      "after_seconds": 0.041691666665428784,
+      "speedup": 326.5525694680299,
+      "before_observable_notifications": 449800,
+      "after_observable_notifications": 2
+    }
+  ],
+  "source_sha256": {
+    "Sources/Contour/MIDIController.swift": "4f9b3a8e8a213397cea22185279ff0b8203b6a121e250698c8195e459d60755b",
+    "Tests/MIDIChecks.swift": "e4d19eb07db9779daaf38663adc8b0f50c368e3d40ed74112f6b1e50eb9c5e27",
+    "docs/performance/midi-before-source.swift.txt": "e5b0f3b3c4e78ae7e3c36f61184ac67f7989fa3ba324d0aa4d687cff04bc91f1"
+  },
+  "correctness": {
+    "legacy_checks": 18,
+    "additional_checks": [
+      "queued stale heartbeat timestamp rejected",
+      "fresh queued press/release retained",
+      "Learn invalidates cached route inside packet",
+      "oversized packet is split without partial-message loss",
+      "terminal diagnostic eventually publishes",
+      "150000 FIFO callback actions match expected order and values"
+    ],
+    "queued_note_or_relative_events_dropped": 0,
+    "queued_terminal_values_verified": true,
+    "all_original_action_counts_and_checksums_equal": true,
+    "compile_warnings_as_errors": true
+  },
+  "limits": [
+    "Synthetic parser/dispatch measurements, not overall app or audio speedups.",
+    "No physical MIDI device, hardware round-trip latency or actual UI frame timing measured.",
+    "FIFO probe measures MainActor scheduling opportunity, not rendered frame rate.",
+    "Drain passes are bounded to32chunks/8192bytes; retained backlog has no hard byte cap, to preserve note/relative events during a stall.",
+    "Diagnostic history is sampled at20Hz; it is not a complete MIDI trace.",
+    "No absolute event deduplication/coalescing: every original action remains observable.",
+    "Mapping persistence is deferred100ms with JSON encoding off the input path; this path was not performance-benchmarked."
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "enqueueMS" : 0.19704099999999999,
+  "events" : 10000,
+  "outputStarted" : false,
+  "wrapperMetrics" : {
+    "jogEvents" : 10000,
+    "lastDecodeMS" : 0,
+    "lastInstallMS" : 0,
+    "nudgeRestores" : 1,
+    "pollCount" : 7,
+    "pollHz" : 4
+  }
+}

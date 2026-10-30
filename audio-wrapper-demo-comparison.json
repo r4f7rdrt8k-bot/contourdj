@@ -1,0 +1,21 @@
+{
+  "cases": [
+    {
+      "variant": 0,
+      "stereoFrames": 3072000,
+      "maxAbsoluteSampleDifference": 1.4901161193847656e-08,
+      "rmsSampleDifference": 1.2720057079078461e-11,
+      "differentFloat32Samples": 89,
+      "passedTolerance1e-6": true
+    },
+    {
+      "variant": 1,
+      "stereoFrames": 3072000,
+      "maxAbsoluteSampleDifference": 2.9802322387695312e-08,
+      "rmsSampleDifference": 2.5640889058928286e-11,
+      "differentFloat32Samples": 1156,
+      "passedTolerance1e-6": true
+    }
+  ],
+  "tolerance": 1e-06
+}

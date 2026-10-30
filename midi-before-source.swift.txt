@@ -1,0 +1,413 @@
+import Foundation
+import Combine
+import CoreMIDI
+
+enum MIDIValueMode: String, Codable, CaseIterable {
+    case absolute7, paired14, relativeTwosComplement, button
+}
+
+/// Channel numbers are zero based internally. `source` is a name filter, not a USB VID claim.
+struct MIDIMapping: Identifiable, Codable, Equatable {
+    var id: String
+    var action: String
+    var description: String
+    var source: String = ""
+    var excludingSource: String = ""
+    var channel: Int = 0
+    var status: Int = 0xB0
+    var number: Int = 0
+    var mode: MIDIValueMode = .absolute7
+    var lsbNumber: Int? = nil
+    var maximum: Double = 127
+    var scale: Double = 1
+}
+
+/// MIDI 1 byte-stream decoder. Running status survives packet boundaries per source;
+/// real-time bytes do not disturb a message and SysEx/system-common are not controls.
+private struct MIDIByteDecoder {
+    var runningStatus: UInt8?
+    var pendingStatus: UInt8?
+    var data: [UInt8] = []
+    var systemExclusive = false
+    var systemRemaining = 0
+
+    mutating func feed(_ bytes: [UInt8]) -> [(UInt8, UInt8, UInt8)] {
+        var messages: [(UInt8, UInt8, UInt8)] = []
+        for byte in bytes {
+            if byte >= 0xF8 { continue }
+            if byte & 0x80 != 0 {
+                data.removeAll(keepingCapacity: true)
+                if byte == 0xF0 {
+                    systemExclusive = true; runningStatus = nil; pendingStatus = nil
+                    systemRemaining = 0
+                } else if byte >= 0xF0 {
+                    systemExclusive = false; runningStatus = nil; pendingStatus = nil
+                    systemRemaining = byte == 0xF2 ? 2 : (byte == 0xF1 || byte == 0xF3 ? 1 : 0)
+                } else {
+                    systemExclusive = false; systemRemaining = 0
+                    runningStatus = byte; pendingStatus = byte
+                }
+                continue
+            }
+            if systemExclusive { continue }
+            if systemRemaining > 0 { systemRemaining -= 1; continue }
+            guard let status = pendingStatus ?? runningStatus else { continue }
+            pendingStatus = status
+            data.append(byte)
+            let length = (status & 0xF0 == 0xC0 || status & 0xF0 == 0xD0) ? 1 : 2
+            if data.count == length {
+                messages.append((status, data[0], length == 2 ? data[1] : 0))
+                data.removeAll(keepingCapacity: true); pendingStatus = nil
+            }
+        }
+        return messages
+    }
+}
+
+@MainActor
+final class MIDIController: ObservableObject {
+    @Published var sources: [String] = []
+    @Published var lastMessage = "Connect a USB MIDI controller, or use Test Controls."
+    @Published var isLearning = false
+    @Published var mappings: [MIDIMapping] { didSet { saveMappings() } }
+    @Published var eventLog: [String] = []
+    var onAction: ((String, Double) -> Void)?
+
+    private var client = MIDIClientRef()
+    private var input = MIDIPortRef()
+    private var connected: [MIDIEndpointRef: String] = [:]
+    private var decoders: [MIDIEndpointRef: MIDIByteDecoder] = [:]
+    private var values: [String: UInt8] = [:]
+    private var held: [String: Set<String>] = [:]
+    private var shiftSources: Set<MIDIEndpointRef> = []
+    private var heartbeats: [String: TimeInterval] = [:]
+    private var jogTouchActions: [String: Set<String>] = [:]
+    private var learningAction: String?
+    private var watchdog: Timer?
+    private let persistsMappings: Bool
+    private static let persistenceKey = "Contour.MIDIMappings.v1"
+
+    init(connectHardware: Bool = true, persistMappings: Bool = true) {
+        persistsMappings = persistMappings
+        if persistMappings, let data = UserDefaults.standard.data(forKey: Self.persistenceKey),
+           let saved = try? JSONDecoder().decode([MIDIMapping].self, from: data) {
+            mappings = saved
+        } else {
+            mappings = Self.defaultMappings()
+        }
+        guard connectHardware else { return }
+        let result = MIDIClientCreateWithBlock("Contour MIDI" as CFString, &client) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.refresh() }
+        }
+        guard result == noErr else {
+            record("CoreMIDI unavailable (\(result)); Test Controls remain available.")
+            return
+        }
+        let portResult = MIDIInputPortCreateWithBlock(client, "Contour input" as CFString, &input) { [weak self] packetList, context in
+            let endpoint = MIDIEndpointRef(UInt(bitPattern: context))
+            var chunks: [[UInt8]] = []
+            let offset = MemoryLayout<MIDIPacketList>.offset(of: \.packet)!
+            var packet = UnsafeRawPointer(packetList).advanced(by: offset).assumingMemoryBound(to: MIDIPacket.self)
+            for _ in 0..<packetList.pointee.numPackets {
+                let length = Int(packet.pointee.length)
+                let dataOffset = MemoryLayout<MIDIPacket>.offset(of: \.data)!
+                let data = UnsafeRawPointer(packet).advanced(by: dataOffset).assumingMemoryBound(to: UInt8.self)
+                chunks.append(Array(UnsafeBufferPointer(start: data, count: length)))
+                packet = UnsafePointer(MIDIPacketNext(packet))
+            }
+            // CoreMIDI callbacks copy only; all published state and routing stay on MainActor.
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                for bytes in chunks { self.consume(bytes: bytes, endpoint: endpoint) }
+            }
+        }
+        guard portResult == noErr else {
+            record("Cannot create MIDI input (\(portResult)); Test Controls remain available.")
+            return
+        }
+        refresh()
+        watchdog = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.checkHeartbeats() }
+        }
+    }
+
+    deinit {
+        watchdog?.invalidate()
+        if input != 0 { MIDIPortDispose(input) }
+        if client != 0 { MIDIClientDispose(client) }
+    }
+
+    /// Connects new sources and disconnects vanished ones. Nothing is sent to hardware.
+    func refresh() {
+        guard input != 0 else { return }
+        var available: [MIDIEndpointRef: String] = [:]
+        for index in 0..<MIDIGetNumberOfSources() {
+            let endpoint = MIDIGetSource(index)
+            guard endpoint != 0 else { continue }
+            let name = Self.name(of: endpoint)
+            available[endpoint] = name
+            if connected[endpoint] == nil {
+                let result = MIDIPortConnectSource(input, endpoint, UnsafeMutableRawPointer(bitPattern: UInt(endpoint)))
+                if result == noErr { record("Connected: \(name)") }
+                else { available.removeValue(forKey: endpoint); record("Cannot connect \(name) (\(result))") }
+            }
+        }
+        for (endpoint, name) in connected where available[endpoint] == nil {
+            MIDIPortDisconnectSource(input, endpoint)
+            releaseSource(endpoint)
+            decoders.removeValue(forKey: endpoint)
+            record("Disconnected: \(name)")
+        }
+        connected = available
+        sources = available.values.sorted()
+    }
+
+    func learn(action: String) {
+        guard !action.isEmpty else { return }
+        learningAction = action; isLearning = true
+        record("Learning \(action): move or press a MIDI control.")
+    }
+
+    func cancelLearn() { learningAction = nil; isLearning = false }
+
+    func resetMappings() {
+        releaseAll()
+        mappings = Self.defaultMappings(); cancelLearn()
+        record("Restored YaSushi mixer and jog defaults.")
+    }
+
+    func removeMapping(id: String) {
+        releaseAll()
+        mappings.removeAll { $0.id == id }
+    }
+
+    func updateMapping(_ mapping: MIDIMapping) {
+        guard let index = mappings.firstIndex(where: { $0.id == mapping.id }),
+              (0...15).contains(mapping.channel), (0...127).contains(mapping.number),
+              [0x90, 0xB0].contains(mapping.status), mapping.scale.isFinite,
+              mapping.maximum.isFinite, mapping.maximum > 0,
+              mapping.lsbNumber.map({ (0...127).contains($0) }) ?? true else { return }
+        releaseAll(); mappings[index] = mapping
+    }
+
+    /// UI action simulation deliberately bypasses hardware/heartbeat checks.
+    func simulate(action: String, value: Double) {
+        guard value.isFinite else { return }
+        record("TEST \(action) = \(Self.pretty(value))")
+        onAction?(action, value)
+    }
+
+    /// Deterministic byte-level test injection also exercises running status and mappings.
+    /// It does not create a CoreMIDI device or send bytes outside Contour.
+    func inject(bytes: [UInt8], source: String = "Ya$ushi Controls") {
+        let endpoint: MIDIEndpointRef = source.lowercased().contains("jog") ? 0xFFFFFFFE : 0xFFFFFFFF
+        consume(bytes: bytes, endpoint: endpoint, nameOverride: source)
+    }
+
+    private func consume(bytes: [UInt8], endpoint: MIDIEndpointRef, nameOverride: String? = nil) {
+        let name = nameOverride ?? connected[endpoint] ?? Self.name(of: endpoint)
+        var decoder = decoders[endpoint] ?? MIDIByteDecoder()
+        let messages = decoder.feed(bytes)
+        decoders[endpoint] = decoder
+        for (status, number, value) in messages {
+            process(status: status, number: number, value: value, endpoint: endpoint, name: name)
+        }
+    }
+
+    private func process(status: UInt8, number: UInt8, value: UInt8, endpoint: MIDIEndpointRef, name: String) {
+        let channel = Int(status & 0x0F), kind = Int(status & 0xF0)
+        guard kind == 0xB0 || kind == 0x90 || kind == 0x80 else { return }
+        let isJog = Self.normalized(name).contains("yasushi") && name.lowercased().contains("jog")
+        let key = "\(endpoint):\(channel)"
+        let now = ProcessInfo.processInfo.systemUptime
+        if isJog && channel < 2 && kind == 0xB0 && number == 33 {
+            if value == 1 {
+                if let prior = heartbeats[key], now - prior >= 0.5 { releaseJog(key: key, deck: channel) }
+                heartbeats[key] = now
+            }
+            return // Do not let periodic heartbeat steal Learn or obscure a control event.
+        }
+        if kind == 0xB0 { values["\(key):\(number)"] = value }
+        let type = kind == 0xB0 ? "CC" : "Note"
+        let raw = "\(name) · ch\(channel + 1) \(type)\(number) \(kind == 0x80 ? 0 : Int(value))"
+
+        if let action = learningAction, !(kind != 0xB0 && (kind == 0x80 || value == 0)) {
+            let mixer = Self.normalized(name).contains("yasushi") && !isJog
+            // The mixer sends LSB before MSB, so wait for the committing MSB.
+            if mixer && kind == 0xB0 && (16...28).contains(Int(number)) { return }
+            var mapping = MIDIMapping(id: UUID().uuidString, action: action, description: raw)
+            mapping.source = name; mapping.channel = channel
+            mapping.status = kind == 0x80 ? 0x90 : kind; mapping.number = Int(number)
+            if kind != 0xB0 { mapping.mode = .button }
+            else if mixer && number < 13 {
+                mapping.mode = .paired14; mapping.lsbNumber = Int(number) + 16; mapping.maximum = 16380
+            } else if action.hasSuffix(".jog") || action == "library.encoder" {
+                mapping.mode = .relativeTwosComplement
+                mapping.scale = isJog && number == 32 ? 1.0 / 64 : 1
+            }
+            // A learned physical input replaces its old assignment; the target action
+            // replaces its other assignments. Relearning cannot fire two actions at once.
+            releaseAll()
+            mappings.removeAll { $0.action == action || (Self.matchesSource($0, name: name) && $0.channel == channel && $0.status == mapping.status && $0.number == mapping.number) }
+            mappings.append(mapping); cancelLearn()
+            record("Mapped \(raw) → \(action)")
+            return
+        }
+
+        let matches = mappings.filter {
+            Self.matchesSource($0, name: name) && $0.channel == channel &&
+            ($0.status == kind || ($0.status == 0x90 && kind == 0x80)) && $0.number == Int(number)
+        }
+        guard !matches.isEmpty else {
+            // Paired LSBs are state updates, not separate controls in the event log.
+            if !mappings.contains(where: { Self.matchesSource($0, name: name) && $0.channel == channel && $0.lsbNumber == Int(number) }) { record(raw) }
+            return
+        }
+        for mapping in matches {
+            var output: Double
+            switch mapping.mode {
+            case .absolute7: output = Double(value) / 127
+            case .paired14:
+                guard let lsb = mapping.lsbNumber, let low = values["\(key):\(lsb)"] else { continue }
+                output = min(1, max(0, Double(Int(value) * 128 + Int(low)) / mapping.maximum))
+            case .relativeTwosComplement:
+                guard value != 0 && value != 64 else { continue }
+                output = Double(value < 64 ? Int(value) : Int(value) - 128) * mapping.scale
+            case .button: output = kind == 0x80 || value == 0 ? 0 : 1
+            }
+            if isJog && channel < 2 && (number == 32 || number == 64) {
+                if output != 0 && !(heartbeats[key].map { now - $0 < 0.5 } ?? false) {
+                    releaseJog(key: key, deck: channel)
+                    record("Ignored stale jog input: \(raw)"); continue
+                }
+                if number == 64 {
+                    if output > 0 && value != 127 { continue }
+                    if mapping.action.hasSuffix(".touch") || mapping.action.hasSuffix(".cue") {
+                        if output > 0 { jogTouchActions[key, default: []].insert(mapping.action) }
+                        else { jogTouchActions[key]?.remove(mapping.action) }
+                    }
+                }
+            }
+            var action = mapping.action
+            if action == "controller.shift" {
+                if output > 0 { shiftSources.insert(endpoint) } else { shiftSources.remove(endpoint) }
+                record("SHIFT \(output > 0 ? "on" : "off")"); continue
+            }
+            let shifted = shiftSources.contains(endpoint)
+            if action.hasSuffix(".beatjump") { output = output > 0 ? (shifted ? 1 : 4) * mapping.scale : 0 }
+            if shifted && action.hasSuffix(".play") { action = action.replacingOccurrences(of: ".play", with: ".sync") }
+            if shifted && action.hasSuffix(".jog") { output *= 5 }
+            if shifted && action == "library.encoder" { action = "library.focus" }
+            if mapping.mode == .button {
+                let sourceKey = "\(endpoint):\(action)"
+                var active = held[sourceKey] ?? []
+                let wasHeld = !active.isEmpty
+                if output > 0 { active.insert(mapping.id) } else { active.remove(mapping.id) }
+                held[sourceKey] = active
+                if action.hasSuffix(".touch") || action.hasSuffix(".cue") {
+                    guard wasHeld != !active.isEmpty else { continue }
+                    output = active.isEmpty ? 0 : 1
+                } else if output == 0 { continue }
+            }
+            record("\(raw) → \(action) \(Self.pretty(output))")
+            onAction?(action, output)
+        }
+    }
+
+    private func checkHeartbeats() {
+        let now = ProcessInfo.processInfo.systemUptime
+        for key in Array(heartbeats.keys) where now - (heartbeats[key] ?? 0) >= 0.5 {
+            let deck = Int(key.split(separator: ":").last ?? "0") ?? 0
+            releaseJog(key: key, deck: deck)
+            heartbeats.removeValue(forKey: key)
+        }
+    }
+
+    private func releaseJog(key: String, deck: Int) {
+        guard let actions = jogTouchActions.removeValue(forKey: key), !actions.isEmpty else { return }
+        let endpoint = key.split(separator: ":").first ?? "0"
+        for action in actions {
+            held["\(endpoint):\(action)"] = []
+            onAction?(action, 0)
+        }
+        record("Jog deck \(deck + 1): released stale press.")
+    }
+
+    private func releaseSource(_ endpoint: MIDIEndpointRef) {
+        let prefix = "\(endpoint):"
+        for (key, active) in held where key.hasPrefix(prefix) && !active.isEmpty {
+            let action = String(key.dropFirst(prefix.count))
+            if action.hasSuffix(".touch") || action.hasSuffix(".cue") { onAction?(action, 0) }
+        }
+        held = held.filter { !$0.key.hasPrefix(prefix) }
+        values = values.filter { !$0.key.hasPrefix(prefix) }
+        shiftSources.remove(endpoint)
+        for deck in 0..<2 { let key = "\(endpoint):\(deck)"; releaseJog(key: key, deck: deck); heartbeats.removeValue(forKey: key) }
+    }
+
+    private func releaseAll() {
+        let endpoints = Set(held.keys.compactMap { UInt32($0.split(separator: ":").first ?? "") })
+        for endpoint in endpoints { releaseSource(endpoint) }
+        shiftSources.removeAll(); values.removeAll()
+    }
+
+    private func saveMappings() {
+        guard persistsMappings else { return }
+        if let data = try? JSONEncoder().encode(mappings) { UserDefaults.standard.set(data, forKey: Self.persistenceKey) }
+    }
+
+    private func record(_ text: String) {
+        lastMessage = text
+        eventLog.insert(text, at: 0)
+        if eventLog.count > 200 { eventLog.removeLast(eventLog.count - 200) }
+    }
+
+    private static func normalized(_ name: String) -> String { name.lowercased().replacingOccurrences(of: "$", with: "s") }
+    private static func matchesSource(_ mapping: MIDIMapping, name: String) -> Bool {
+        let name = normalized(name)
+        return (mapping.source.isEmpty || name.contains(normalized(mapping.source))) &&
+            (mapping.excludingSource.isEmpty || !name.contains(normalized(mapping.excludingSource)))
+    }
+    private static func pretty(_ value: Double) -> String { String(format: "%.3f", value) }
+    private static func name(of endpoint: MIDIEndpointRef) -> String {
+        for key in [kMIDIPropertyDisplayName, kMIDIPropertyName] {
+            var name: Unmanaged<CFString>?
+            if MIDIObjectGetStringProperty(endpoint, key, &name) == noErr, let name { return name.takeRetainedValue() as String }
+        }
+        return "MIDI source \(endpoint)"
+    }
+
+    static func defaultMappings() -> [MIDIMapping] {
+        var result: [MIDIMapping] = []
+        func add(_ action: String, _ number: Int, _ description: String, mode: MIDIValueMode = .button, scale: Double = 1) {
+            result.append(MIDIMapping(id: "yasushi-\(mode.rawValue)-\(number)", action: action, description: description,
+                source: "yasushi", excludingSource: "jog", channel: 0, status: mode == .button ? 0x90 : 0xB0,
+                number: number, mode: mode, scale: scale))
+        }
+        let analogs = ["deck0.high", "deck0.mid", "deck0.low", "deck0.filter", "deck1.high", "deck1.mid", "deck1.low", "deck1.filter", "deck0.volume", "deck1.volume", "deck0.rate", "deck1.rate", "mixer.crossfader"]
+        for (cc, action) in analogs.enumerated() {
+            result.append(MIDIMapping(id: "yasushi-analog-\(cc)", action: action,
+                description: "YaSushi ch1 CC\(cc) + LSB\(cc + 16) · 14-bit", source: "yasushi", excludingSource: "jog",
+                channel: 0, status: 0xB0, number: cc, mode: .paired14, lsbNumber: cc + 16, maximum: 16380))
+        }
+        let names = ["beatjump", "stop", "play", "cue", "beatjump", "loop", "cue", "play", "effectsOff", "load"]
+        for deck in 0..<2 {
+            for (index, name) in names.enumerated() {
+                let note = 32 + deck * 10 + index
+                add("deck\(deck).\(name)", note, "YaSushi deck \(deck + 1) Note\(note) · \(name)", scale: index == 0 ? -1 : 1)
+            }
+            add("deck\(deck).jog", 64 + deck, "YaSushi encoder \(deck + 1) CC\(64 + deck) · ±1", mode: .relativeTwosComplement)
+            add("deck\(deck).touch", 55 + deck, "YaSushi jog press Note\(55 + deck)")
+            for (cc, action, mode, scale) in [(32, "jog", MIDIValueMode.relativeTwosComplement, 1.0 / 64), (64, "touch", .button, 1.0)] {
+                result.append(MIDIMapping(id: "yasushi-jog-\(deck)-\(cc)", action: "deck\(deck).\(action)",
+                    description: "YaSushi Jog ch\(deck + 1) \(mode == .button ? "Note" : "CC")\(cc)", source: "yasushi jog",
+                    channel: deck, status: mode == .button ? 0x90 : 0xB0, number: cc, mode: mode, scale: scale))
+            }
+        }
+        add("controller.shift", 52, "YaSushi SHIFT Note52")
+        add("library.back", 53, "YaSushi browser back Note53")
+        add("library.load", 54, "YaSushi browser confirm Note54")
+        add("library.encoder", 66, "YaSushi browser encoder CC66 · ±1", mode: .relativeTwosComplement)
+        return result
+    }
+}

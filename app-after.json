@@ -1,0 +1,41 @@
+{
+  "workload": "Same release app startup/2demos/~3s live play+processing+record/Hotcue/loop/MIDI action smoke as before;3 isolated runs. Timing includes deliberate sleeps.",
+  "trials": [
+    {
+      "trial": 0,
+      "wall_clock_seconds": 4.985874415999206,
+      "exit_code": 0,
+      "smoke_passed": true,
+      "timed_seconds": [
+        4.98,
+        2.44,
+        0.12
+      ],
+      "peak_rss_bytes": 246611968
+    },
+    {
+      "trial": 1,
+      "wall_clock_seconds": 4.875137832999826,
+      "exit_code": 0,
+      "smoke_passed": true,
+      "timed_seconds": [
+        4.87,
+        2.27,
+        0.1
+      ],
+      "peak_rss_bytes": 246431744
+    },
+    {
+      "trial": 2,
+      "wall_clock_seconds": 5.055302708000454,
+      "exit_code": 0,
+      "smoke_passed": true,
+      "timed_seconds": [
+        5.05,
+        2.51,
+        0.12
+      ],
+      "peak_rss_bytes": 266747904
+    }
+  ]
+}

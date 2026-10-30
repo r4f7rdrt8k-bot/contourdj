@@ -1,0 +1,69 @@
+{
+  "allCodecLoadChecksPassed": true,
+  "codecLoadChecks": [
+    {
+      "duration": 40,
+      "estimatedBPM": 120,
+      "file": "rea_synth_120bpm_40s.wav",
+      "loaded": true,
+      "waveformNonzero": true
+    },
+    {
+      "duration": 40,
+      "estimatedBPM": 120,
+      "file": "codec_variants/rea_synth_120bpm_40s.aiff",
+      "loaded": true,
+      "waveformNonzero": true
+    },
+    {
+      "duration": 40,
+      "estimatedBPM": 120,
+      "file": "codec_variants/rea_synth_120bpm_40s.mp3",
+      "loaded": true,
+      "waveformNonzero": true
+    },
+    {
+      "duration": 40,
+      "estimatedBPM": 120,
+      "file": "codec_variants/rea_synth_120bpm_40s.flac",
+      "loaded": true,
+      "waveformNonzero": true
+    },
+    {
+      "duration": 40,
+      "estimatedBPM": 120,
+      "file": "codec_variants/rea_synth_120bpm_40s_aac.m4a",
+      "loaded": true,
+      "waveformNonzero": true
+    },
+    {
+      "duration": 40,
+      "estimatedBPM": 120,
+      "file": "codec_variants/rea_synth_120bpm_40s_alac.m4a",
+      "loaded": true,
+      "waveformNonzero": true
+    },
+    {
+      "duration": 40,
+      "estimatedBPM": 120,
+      "file": "codec_variants/rea_synth_120bpm_40s.ogg",
+      "loaded": true,
+      "waveformNonzero": true
+    }
+  ],
+  "demoDecksLoaded": true,
+  "engineError": null,
+  "finished": "2026-10-24 23:12:14 +0000",
+  "hotcueRecalls": true,
+  "loopEnabled": true,
+  "midiActionCrossfader": true,
+  "mode": "Live AVAudioEngine with synthetic demo audio; no personal media",
+  "passed": true,
+  "playbackAdvanced": true,
+  "preparationSaved": true,
+  "recordingFrames": 145450,
+  "recordingNonzero": true,
+  "recordingPeak": 0.1085205078125,
+  "recordingSampleRate": 48000,
+  "started": "2026-10-24 23:12:11 +0000"
+}

@@ -1,0 +1,29 @@
+{
+  "suite":"Contour standalone C++ DSP",
+  "test_count":14,
+  "failure_count":0,
+  "render_cpp_allocations":0,
+  "render_cpp_deallocations":0,
+  "offline_audio_seconds":10,
+  "offline_render_wall_seconds":0.0622635,
+  "offline_realtime_ratio":0.00622635,
+  "offline_peak":0.343,
+  "offline_wav":"/Users/yassinghobara/Desktop/ContourDJ/.build/core-validation/offline-mix.wav",
+  "limitations":["C++ allocator instrumentation does not interpose every libc allocator.","CPU timing is one offline synthetic run, not device latency or dropout certification.","AVAudioEngine output and file decoder are integration tests outside this core suite."],
+  "tests":[
+    {"name":"crossfader_stereo_routing","passed":true,"seconds":0.00301196,"error":""},
+    {"name":"loop_bounds_and_audio","passed":true,"seconds":0.00271771,"error":""},
+    {"name":"reverse_samples_and_position","passed":true,"seconds":0.00212183,"error":""},
+    {"name":"rate_changes_source_time","passed":true,"seconds":0.00266254,"error":""},
+    {"name":"low_EQ_signal_attenuation","passed":true,"seconds":0.00291633,"error":""},
+    {"name":"lowpass_signal_attenuation","passed":true,"seconds":0.00289283,"error":""},
+    {"name":"echo_delayed_impulse","passed":true,"seconds":0.002335,"error":""},
+    {"name":"pattern_recording_exact_capture","passed":true,"seconds":0.00224954,"error":""},
+    {"name":"four_decks_and_natural_end","passed":true,"seconds":0.00362317,"error":""},
+    {"name":"concurrent_load_hazard_reclamation","passed":true,"seconds":0.0497946,"error":""},
+    {"name":"recording_overflow_is_bounded_and_reported","passed":true,"seconds":0.0351289,"error":""},
+    {"name":"invalid_controls_and_nonfinite_input","passed":true,"seconds":0.00232058,"error":""},
+    {"name":"effects_reverb_flanger_are_finite_and_change_signal","passed":true,"seconds":0.0131705,"error":""},
+    {"name":"offline_ten_seconds_four_deck_render","passed":true,"seconds":0.0974062,"error":""}
+  ]
+}

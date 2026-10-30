@@ -1,0 +1,84 @@
+{
+  "cases" : [
+    {
+      "bins" : 768,
+      "case" : "fixture40",
+      "duration" : 40,
+      "heartbeatSamples" : 13,
+      "loadMS" : 48.003374999999998,
+      "mainMaxGapMS" : 5.9747079999999997,
+      "run" : 0
+    },
+    {
+      "bins" : 768,
+      "case" : "fixture40",
+      "duration" : 40,
+      "heartbeatSamples" : 8,
+      "loadMS" : 26.328917000000001,
+      "mainMaxGapMS" : 6.1444169999999998,
+      "run" : 1
+    },
+    {
+      "bins" : 768,
+      "case" : "fixture40",
+      "duration" : 40,
+      "heartbeatSamples" : 8,
+      "loadMS" : 24.314042000000001,
+      "mainMaxGapMS" : 5.8156660000000002,
+      "run" : 2
+    },
+    {
+      "bins" : 768,
+      "case" : "eightMinute",
+      "duration" : 480,
+      "heartbeatSamples" : 36,
+      "loadMS" : 161.72120899999999,
+      "mainMaxGapMS" : 6.2000840000000004,
+      "run" : 0
+    },
+    {
+      "bins" : 768,
+      "case" : "eightMinute",
+      "duration" : 480,
+      "heartbeatSamples" : 31,
+      "loadMS" : 134.55904200000001,
+      "mainMaxGapMS" : 6.1942079999999997,
+      "run" : 1
+    },
+    {
+      "bins" : 768,
+      "case" : "eightMinute",
+      "duration" : 480,
+      "heartbeatSamples" : 28,
+      "loadMS" : 124.766583,
+      "mainMaxGapMS" : 6.1831250000000004,
+      "run" : 2
+    },
+    {
+      "case" : "demo64",
+      "duration" : 64,
+      "heartbeatSamples" : 18,
+      "loadMS" : 71.447166999999993,
+      "mainMaxGapMS" : 6.1853749999999996,
+      "run" : 0
+    },
+    {
+      "case" : "demo64",
+      "duration" : 64,
+      "heartbeatSamples" : 18,
+      "loadMS" : 71.284790999999998,
+      "mainMaxGapMS" : 6.2103339999999996,
+      "run" : 1
+    },
+    {
+      "case" : "demo64",
+      "duration" : 64,
+      "heartbeatSamples" : 17,
+      "loadMS" : 70.149874999999994,
+      "mainMaxGapMS" : 6.1674579999999999,
+      "run" : 2
+    }
+  ],
+  "engineOutputStarted" : false,
+  "optimization" : "-O"
+}

@@ -1,0 +1,10 @@
+{
+  "float_values": 3258928,
+  "max_absolute_difference": 5.820766091346741e-11,
+  "rms_difference": 4.559925670352658e-14,
+  "differing_values": 6,
+  "nonfinite_values": 0,
+  "tolerance": 1e-06,
+  "passed": true,
+  "scope": "2400blocks with0/1/7/63/128/257/512/1024/4096frames; control ramps, allFX, pause/resume/tails, filter/EQ, source reload, reverse/loops, pattern toggles, recording; stereo samples plus block-end transport state."
+}

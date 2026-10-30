@@ -1,0 +1,38 @@
+{
+  "benchmark_kind" : "synchronous raw-byte injection with a Combine objectWillChange subscriber; no audio or UI rendering",
+  "build" : "swiftc -O -swift-version 5",
+  "hardware_input" : false,
+  "results" : [
+    {
+      "action_callbacks" : 2220000,
+      "callback_checksum" : 1105915.34004885,
+      "cycles" : 2220000,
+      "messages_per_second" : 2924371.8898698674,
+      "midi_messages" : 4440000,
+      "observable_notifications" : 62,
+      "profile" : "paired14",
+      "seconds" : 1.5182747500002733
+    },
+    {
+      "action_callbacks" : 5400000,
+      "callback_checksum" : 1350000,
+      "cycles" : 1350000,
+      "messages_per_second" : 3528898.3830260588,
+      "midi_messages" : 5400000,
+      "observable_notifications" : 47,
+      "profile" : "jog-notes",
+      "seconds" : 1.530222583334762
+    },
+    {
+      "action_callbacks" : 5550000,
+      "callback_checksum" : 1662957.6700244257,
+      "cycles" : 1110000,
+      "messages_per_second" : 4327596.8037813297,
+      "midi_messages" : 6660000,
+      "observable_notifications" : 60,
+      "profile" : "mixed-running-status",
+      "seconds" : 1.5389603750008973
+    }
+  ],
+  "schema" : 1
+}
